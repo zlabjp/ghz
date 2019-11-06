@@ -2,10 +2,12 @@ package runner
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"text/template"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jhump/protoreflect/desc"
 )
 
@@ -13,6 +15,7 @@ import (
 type callTemplateData struct {
 	WorkerID           string // unique worker ID
 	RequestNumber      int64  // unique incremented request number for each request
+	Base64EncodedUUID  string // Base64 encoded  UUID
 	FullyQualifiedName string // fully-qualified name of the method call
 	MethodName         string // shorter call method name
 	ServiceName        string // the service name
@@ -28,9 +31,13 @@ type callTemplateData struct {
 func newCallTemplateData(mtd *desc.MethodDescriptor, workerID string, reqNum int64) *callTemplateData {
 	now := time.Now()
 
+	u, _ := uuid.NewRandom()
+	b64UUID := base64.StdEncoding.EncodeToString([]byte(u.String()))
+
 	return &callTemplateData{
 		WorkerID:           workerID,
 		RequestNumber:      reqNum,
+		Base64EncodedUUID:  b64UUID,
 		FullyQualifiedName: mtd.GetFullyQualifiedName(),
 		MethodName:         mtd.GetName(),
 		ServiceName:        mtd.GetService().GetName(),
