@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"sync"
@@ -279,6 +280,13 @@ func (b *Requester) newClientConn(withStatsHandler bool) (*grpc.ClientConn, erro
 		sh := &statsHandler{results: b.results}
 		b.handlers = append(b.handlers, sh)
 		opts = append(opts, grpc.WithStatsHandler(sh))
+	}
+
+	if strings.HasSuffix(b.config.host, ".sock") {
+		dialer := func(ctx context.Context, a string) (net.Conn, error) {
+			return net.Dial("unix", a)
+		}
+		opts = append(opts, grpc.WithContextDialer(dialer))
 	}
 
 	// create client connection
